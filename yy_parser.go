@@ -173,7 +173,7 @@ func ParseErrorWith(errstr string, lineno int) error {
 // the last field text.
 func (parser *Parser) setLastSelectFieldText(st *ast.SelectStmt, lastEnd int) {
 	lastField := st.Fields.Fields[len(st.Fields.Fields)-1]
-	if lastField.Offset+len(lastField.Text()) >= len(parser.src)-1 {
+	if lastField.Offset+len(lastField.Text()) >= len(parser.src)-1 && lastField.Offset < lastEnd {
 		lastField.SetText(parser.src[lastField.Offset:lastEnd])
 	}
 }
@@ -184,6 +184,9 @@ func (parser *Parser) startOffset(v *yySymType) int {
 
 func (parser *Parser) endOffset(v *yySymType) int {
 	offset := v.offset
+	if offset > len(parser.src) {
+		return offset
+	}
 	for offset > 0 && unicode.IsSpace(rune(parser.src[offset-1])) {
 		offset--
 	}
