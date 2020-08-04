@@ -3914,7 +3914,6 @@ func (s *testParserSuite) TestUnionOrderBy(c *C) {
 	}
 
 	for _, t := range tests {
-		fmt.Println(t)
 		stmt, _, err := parser.Parse(t.src, "", "")
 		c.Assert(err, IsNil)
 		us, ok := stmt[0].(*ast.SetOprStmt)
