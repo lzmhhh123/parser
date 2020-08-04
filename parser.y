@@ -656,8 +656,11 @@ import (
 	buckets                    "BUCKETS"
 	builtins                   "BUILTINS"
 	cancel                     "CANCEL"
+	cardinality                "CARDINALITY"
 	cmSketch                   "CMSKETCH"
+	correlation                "CORRELATION"
 	ddl                        "DDL"
+	dependency                 "DEPENDENCY"
 	depth                      "DEPTH"
 	drainer                    "DRAINER"
 	jobs                       "JOBS"
@@ -668,6 +671,7 @@ import (
 	pessimistic                "PESSIMISTIC"
 	pump                       "PUMP"
 	samples                    "SAMPLES"
+	statistics                 "STATISTICS"
 	stats                      "STATS"
 	statsMeta                  "STATS_META"
 	statsHistograms            "STATS_HISTOGRAMS"
@@ -783,16 +787,18 @@ import (
 	BRIEStmt             "BACKUP or RESTORE statement"
 	CommitStmt           "COMMIT statement"
 	CreateTableStmt      "CREATE TABLE statement"
-	CreateViewStmt       "CREATE VIEW  stetement"
+	CreateViewStmt       "CREATE VIEW  statement"
 	CreateUserStmt       "CREATE User statement"
 	CreateRoleStmt       "CREATE Role statement"
 	CreateDatabaseStmt   "Create Database Statement"
 	CreateIndexStmt      "CREATE INDEX statement"
 	CreateBindingStmt    "CREATE BINDING  statement"
 	CreateSequenceStmt   "CREATE SEQUENCE statement"
+	CreateStatisticsStmt "CREATE STATISTICS statement"
 	DoStmt               "Do statement"
 	DropDatabaseStmt     "DROP DATABASE statement"
 	DropIndexStmt        "DROP INDEX statement"
+	DropStatisticsStmt   "DROP STATISTICS statement"
 	DropStatsStmt        "DROP STATS statement"
 	DropTableStmt        "DROP TABLE statement"
 	DropSequenceStmt     "DROP SEQUENCE statement"
@@ -811,7 +817,7 @@ import (
 	GrantStmt            "Grant statement"
 	GrantRoleStmt        "Grant role statement"
 	InsertIntoStmt       "INSERT INTO statement"
-	IndexAdviseStmt      "INDEX ADVISE stetement"
+	IndexAdviseStmt      "INDEX ADVISE statement"
 	KillStmt             "Kill statement"
 	LoadDataStmt         "Load data statement"
 	LoadStatsStmt        "Load statistic statement"
@@ -1045,6 +1051,7 @@ import (
 	SplitSyntaxOption                      "Split syntax Option"
 	StatementList                          "statement list"
 	StatsPersistentVal                     "stats_persistent value"
+	StatsType                              "stats type value"
 	StringList                             "string list"
 	SubPartDefinition                      "SubPartition definition"
 	SubPartDefinitionList                  "SubPartition definition list"
@@ -3090,6 +3097,38 @@ NumLiteral:
 	intLit
 |	floatLit
 |	decLit
+
+StatsType:
+	'(' "CARDINALITY" ')'
+	{
+		$$ = ast.StatsTypeCardinality
+	}
+|	'(' "DEPENDENCY" ')'
+	{
+		$$ = ast.StatsTypeDependency
+	}
+|	'(' "CORRELATION" ')'
+	{
+		$$ = ast.StatsTypeCorrelation
+	}
+
+CreateStatisticsStmt:
+	"CREATE" "STATISTICS" IfNotExists Identifier StatsType "ON" TableName '(' ColumnNameList ')'
+	{
+		$$ = &ast.CreateStatisticsStmt{
+			IfNotExists: $3.(bool),
+			StatsName:   $4,
+			StatsType:   $5.(uint8),
+			Table:       $7.(*ast.TableName),
+			Columns:     $9.([]*ast.ColumnName),
+		}
+	}
+
+DropStatisticsStmt:
+	"DROP" "STATISTICS" Identifier
+	{
+		$$ = &ast.DropStatisticsStmt{StatsName: $3}
+	}
 
 /**************************************CreateIndexStmt***************************************
  * See https://dev.mysql.com/doc/refman/8.0/en/create-index.html
@@ -5322,8 +5361,11 @@ TiDBKeyword:
 |	"BUCKETS"
 |	"BUILTINS"
 |	"CANCEL"
+|	"CARDINALITY"
 |	"CMSKETCH"
+|	"CORRELATION"
 |	"DDL"
+|	"DEPENDENCY"
 |	"DEPTH"
 |	"DRAINER"
 |	"JOBS"
@@ -5332,6 +5374,7 @@ TiDBKeyword:
 |	"NODE_STATE"
 |	"PUMP"
 |	"SAMPLES"
+|	"STATISTICS"
 |	"STATS"
 |	"STATS_META"
 |	"STATS_HISTOGRAMS"
@@ -8642,6 +8685,12 @@ AdminStmt:
 			Tp: ast.AdminReloadBindings,
 		}
 	}
+|	"ADMIN" "RELOAD" "STATISTICS"
+	{
+		$$ = &ast.AdminStmt{
+			Tp: ast.AdminReloadStatistics,
+		}
+	}
 |	"ADMIN" "SHOW" "TELEMETRY"
 	{
 		$$ = &ast.AdminStmt{
@@ -9334,6 +9383,7 @@ Statement:
 |	CreateRoleStmt
 |	CreateBindingStmt
 |	CreateSequenceStmt
+|	CreateStatisticsStmt
 |	DoStmt
 |	DropDatabaseStmt
 |	DropIndexStmt
@@ -9342,6 +9392,7 @@ Statement:
 |	DropViewStmt
 |	DropUserStmt
 |	DropRoleStmt
+|	DropStatisticsStmt
 |	DropStatsStmt
 |	DropBindingStmt
 |	FlushStmt
@@ -9750,7 +9801,7 @@ NumericType:
 		// TODO: check flen 0
 		x := types.NewFieldType($1.(byte))
 		x.Flen = $2.(int)
-		if $2.(int) != types.UnspecifiedLength {
+		if $2.(int) != types.UnspecifiedLength && types.TiDBStrictIntegerDisplayWidth {
 			yylex.AppendError(yylex.Errorf("Integer display width is deprecated and will be removed in a future release."))
 			parser.lastErrorAsWarn()
 		}
@@ -10028,6 +10079,13 @@ StringType:
 	{
 		x := types.NewFieldType(mysql.TypeEnum)
 		x.Elems = $3.([]string)
+		fieldLen := -1 // enum_flen = max(ele_flen)
+		for _, e := range x.Elems {
+			if len(e) > fieldLen {
+				fieldLen = len(e)
+			}
+		}
+		x.Flen = fieldLen
 		x.Charset = $5
 		$$ = x
 	}
@@ -10035,6 +10093,11 @@ StringType:
 	{
 		x := types.NewFieldType(mysql.TypeSet)
 		x.Elems = $3.([]string)
+		fieldLen := len(x.Elems) - 1 // set_flen = sum(ele_flen) + number_of_ele - 1
+		for _, e := range x.Elems {
+			fieldLen += len(e)
+		}
+		x.Flen = fieldLen
 		x.Charset = $5
 		$$ = x
 	}
