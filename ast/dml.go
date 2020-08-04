@@ -1035,20 +1035,7 @@ func (n *SetOprSelectList) Restore(ctx *format.RestoreCtx) error {
 		switch selectStmt := stmt.(type) {
 		case *SelectStmt:
 			if i != 0 {
-				switch *selectStmt.AfterSetOperator {
-				case Union:
-					ctx.WriteKeyWord(" UNION ")
-				case UnionAll:
-					ctx.WriteKeyWord(" UNION ALL ")
-				case Except:
-					ctx.WriteKeyWord(" EXCEPT ")
-				case ExceptAll:
-					ctx.WriteKeyWord(" EXCEPT ALL ")
-				case Intersect:
-					ctx.WriteKeyWord(" INTERSECT ")
-				case IntersectAll:
-					ctx.WriteKeyWord(" INTERSECT ALL ")
-				}
+				ctx.WriteKeyWord(" " + selectStmt.AfterSetOperator.String() + " ")
 			}
 			if selectStmt.IsInBraces {
 				ctx.WritePlain("(")
@@ -1061,20 +1048,7 @@ func (n *SetOprSelectList) Restore(ctx *format.RestoreCtx) error {
 			}
 		case *SetOprSelectList:
 			if i != 0 {
-				switch *selectStmt.AfterSetOperator {
-				case Union:
-					ctx.WriteKeyWord(" UNION ")
-				case UnionAll:
-					ctx.WriteKeyWord(" UNION ALL ")
-				case Except:
-					ctx.WriteKeyWord(" EXCEPT ")
-				case ExceptAll:
-					ctx.WriteKeyWord(" EXCEPT ALL ")
-				case Intersect:
-					ctx.WriteKeyWord(" INTERSECT ")
-				case IntersectAll:
-					ctx.WriteKeyWord(" INTERSECT ALL ")
-				}
+				ctx.WriteKeyWord(" " + selectStmt.AfterSetOperator.String() + " ")
 			}
 			ctx.WritePlain("(")
 			err := selectStmt.Restore(ctx)
@@ -1114,6 +1088,24 @@ const (
 	Intersect
 	IntersectAll
 )
+
+func (s *SetOprType) String() string {
+	switch *s {
+	case Union:
+		return "UNION"
+	case UnionAll:
+		return "UNION ALL"
+	case Except:
+		return "EXCEPT"
+	case ExceptAll:
+		return "EXCEPT ALL"
+	case Intersect:
+		return "INTERSECT"
+	case IntersectAll:
+		return "INTERSECT ALL"
+	}
+	return ""
+}
 
 // SetOprStmt represents "union/except/intersect statement"
 // See https://dev.mysql.com/doc/refman/5.7/en/union.html
