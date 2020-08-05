@@ -7957,8 +7957,6 @@ SubSelect:
 	'(' SetOprStmt ')'
 	{
 		s := $2.(ast.ResultSetNode)
-		endOffset := parser.endOffset(&yyS[yypt])
-		parser.setLastSelectFieldText(s, endOffset)
 		src := parser.src
 		// See the implementation of yyParse function
 		s.SetText(src[yyS[yypt-1].offset:yyS[yypt].offset])
