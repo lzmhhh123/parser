@@ -7956,6 +7956,10 @@ SelectStmtIntoOption:
 SubSelect:
 	'(' SetOprStmt ')'
 	{
+		if sel, isSelect := $2.(*ast.SelectStmt) {
+			endOffset := parser.endOffset(&yyS[yypt])
+			parser.setLastSelectFieldText(sel, endOffset)
+		}
 		s := $2.(ast.ResultSetNode)
 		src := parser.src
 		// See the implementation of yyParse function
@@ -8083,6 +8087,8 @@ SetOprClause:
 	{
 		setList := []ast.Node{&ast.SetOprSelectList{Selects: $2.([]ast.Node)}}
 		if sel, isSelect := setList[0].(*ast.SelectStmt); isSelect && len(setList) == 1 {
+			endOffset := parser.endOffset(&yyS[yypt])
+        	parser.setLastSelectFieldText(sel, endOffset)
 			sel.IsInBraces = true
 		}
 		$$ = setList
