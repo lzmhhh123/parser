@@ -7956,7 +7956,7 @@ SelectStmtIntoOption:
 SubSelect:
 	'(' SetOprStmt ')'
 	{
-		if sel, isSelect := $2.(*ast.SelectStmt) {
+		if sel, isSelect := $2.(*ast.SelectStmt); isSelect {
 			endOffset := parser.endOffset(&yyS[yypt])
 			parser.setLastSelectFieldText(sel, endOffset)
 		}
