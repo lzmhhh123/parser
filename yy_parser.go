@@ -173,7 +173,7 @@ func ParseErrorWith(errstr string, lineno int) error {
 // the last field text.
 func (parser *Parser) setLastSelectFieldText(st *ast.SelectStmt, lastEnd int) {
 	lastField := st.Fields.Fields[len(st.Fields.Fields)-1]
-	if lastField.Offset+len(lastField.Text()) >= len(parser.src)-1 && lastField.Offset < lastEnd {
+	if lastField.Offset+len(lastField.Text()) >= len(parser.src)-1 && lastField.Offset < lastEnd && lastEnd <= len(parser.src) {
 		lastField.SetText(parser.src[lastField.Offset:lastEnd])
 	}
 }
