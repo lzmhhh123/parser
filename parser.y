@@ -817,6 +817,7 @@ import (
 	DropBindingStmt      "DROP BINDING  statement"
 	DeallocateStmt       "Deallocate prepared statement"
 	DeleteFromStmt       "DELETE FROM statement"
+	DeleteFromUsingStmt  "DELETE FROM USING statement"
 	EmptyStmt            "empty statement"
 	ExecuteStmt          "Execute statement"
 	ExplainStmt          "EXPLAIN statement"
@@ -3981,25 +3982,19 @@ DeleteFromStmt:
 		}
 		$$ = x
 	}
-|	"DELETE" TableOptimizerHints PriorityOpt QuickOptional IgnoreOptional "FROM" TableAliasRefList "USING" TableRefs WhereClauseOptional
+|	DeleteFromUsingStmt TableRefs WhereClauseOptional
 	{
 		// Multiple Table
-		x := &ast.DeleteStmt{
-			Priority:     $3.(mysql.PriorityEnum),
-			Quick:        $4.(bool),
-			IgnoreErr:    $5.(bool),
-			IsMultiTable: true,
-			Tables:       &ast.DeleteTableList{Tables: $7.([]*ast.TableName)},
-			TableRefs:    &ast.TableRefsClause{TableRefs: $9.(*ast.Join)},
-		}
-		if $2 != nil {
-			x.TableHints = $2.([]*ast.TableOptimizerHint)
-		}
-		if $10 != nil {
-			x.Where = $10.(ast.ExprNode)
+		x := $1.(*ast.DeleteStmt)
+		x.TableRefs = &ast.TableRefsClause{TableRefs: $2.(*ast.Join)},
+		if $3 != nil {
+			x.Where = $3.(ast.ExprNode)
 		}
 		$$ = x
 	}
+
+DeleteFromUsingStmt:
+	DeleteFromStmt "USING"
 
 DatabaseSym:
 	"DATABASE"
@@ -11150,7 +11145,7 @@ RoleSpecList:
  *      CREATE GLOBAL BINDING FOR select Col1,Col2 from table USING select Col1,Col2 from table use index(Col1)
  *******************************************************************/
 CreateBindingStmt:
-	"CREATE" GlobalScope "BINDING" "FOR" SetOprStmt1 "USING" SetOprStmt1
+	"CREATE" GlobalScope "BINDING" "FOR" DeleteFromUsingStmt DeleteFromStmt
 	{
 		startOffset := parser.startOffset(&yyS[yypt-2])
 		endOffset := parser.startOffset(&yyS[yypt-1])
@@ -11160,7 +11155,6 @@ CreateBindingStmt:
 
 		startOffset = parser.startOffset(&yyS[yypt])
 		//hintedSetOprStmt := $7.(*ast.SetOprStmt)
-		hintedSetOprStmt := $7
 		hintedSetOprStmt.SetText(strings.TrimSpace(parser.src[startOffset:]))
 
 		x := &ast.CreateBindingStmt{
