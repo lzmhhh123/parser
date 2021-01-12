@@ -218,8 +218,10 @@ func (ft *FieldType) String() string {
 
 // Restore implements Node interface.
 func (ft *FieldType) Restore(ctx *format.RestoreCtx) error {
+	if ctx.Flags|format.RestoreTpConvertFlinkType != 0 {
+		ctx.WriteKeyWord(TypeFlinkStr(ft.Tp))
+	}
 	ctx.WriteKeyWord(TypeToStr(ft.Tp, ft.Charset))
-
 	precision := UnspecifiedLength
 	scale := UnspecifiedLength
 

@@ -962,6 +962,9 @@ func (n *CreateTableStmt) Restore(ctx *format.RestoreCtx) error {
 	lenConstraints := len(n.Constraints)
 	if lenCols+lenConstraints > 0 {
 		ctx.WritePlain(" (")
+		if n.Table.Category.L != "" {
+			ctx.Flags |= format.RestoreTpConvertFlinkType
+		}
 		for i, col := range n.Cols {
 			if i > 0 {
 				ctx.WritePlain(",")
@@ -982,15 +985,16 @@ func (n *CreateTableStmt) Restore(ctx *format.RestoreCtx) error {
 	}
 	if len(n.OuterArgs) > 0 {
 		ctx.WritePlain("(")
-		i := 0
+		first := true
 		for key, value := range n.OuterArgs {
+			if !first {
+				ctx.WritePlain(",")
+			} else {
+				first = false
+			}
 			ctx.WriteString(key)
 			ctx.WritePlain("=")
 			ctx.WriteString(value)
-			i++
-			if i != len(n.OuterArgs) {
-				ctx.WritePlain(",")
-			}
 		}
 		ctx.WritePlain(")")
 		// the outer table ignore the options of table

@@ -94,6 +94,43 @@ func TypeToStr(tp byte, cs string) (r string) {
 	return ts
 }
 
+var type2FlinkStr = map[string]string{
+	"tinyint":    "tinyint",
+	"smallint":   "smallint",
+	"mediumint":  "int",
+	"int":        "int",
+	"bigint":     "bigint",
+	"char":       "string",
+	"varchar":    "string",
+	"tinytext":   "string",
+	"mediumtext": "string",
+	"text":       "string",
+	"longtext":   "string",
+	"float":      "float",
+	"double":     "double",
+	"decimal":    "decimal",
+	"date":       "date",
+	"time":       "time",
+	"datetime":   "timestamp",
+	"timestamp":  "timestamp",
+	"year":       "smallint",
+	"bool":       "boolean",
+	"json":       "string",
+	"enum":       "string",
+	"set":        "string",
+}
+
+// TypeFlinkStr converts tp to a flink type string.
+func TypeFlinkStr(tp byte) (r string) {
+	if strTp, ok := type2Str[tp]; ok {
+		if r, ok = type2FlinkStr[strTp]; ok {
+			return
+		}
+		return strTp
+	}
+	return "bytes"
+}
+
 var (
 	dig2bytes = [10]int{0, 1, 1, 2, 2, 3, 3, 4, 4, 4}
 )

@@ -220,6 +220,8 @@ const (
 	RestoreSpacesAroundBinaryOperation
 
 	RestoreStringWithoutDefaultCharset
+
+	RestoreTpConvertFlinkType
 )
 
 const (
