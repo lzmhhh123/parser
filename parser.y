@@ -1015,6 +1015,7 @@ import (
 	OptionLevel                            "3 levels used by lightning config"
 	OrderBy                                "ORDER BY clause"
 	OrReplace                              "or replace"
+	OuterArgList                           "outer table arguments list"
 	ByItem                                 "BY item"
 	OrderByOptional                        "Optional ORDER BY clause optional"
 	ByList                                 "BY list"
@@ -3530,6 +3531,29 @@ CreateTableStmt:
 			IfNotExists: $4.(bool),
 			IsTemporary: $2.(bool),
 		}
+	}
+|	"CREATE" OptTemporary "TABLE" IfNotExists TableName "WITH" '(' OuterArgList ')'
+	{
+		$$ = &ast.CreateTableStmt{
+			Table:       $5.(*ast.TableName),
+			IfNotExists: $4.(bool),
+			IsTemporary: $2.(bool),
+			OuterArgs:   $8.(map[string]string),
+		}
+	}
+
+OuterArgList:
+	identifier "=" identifier
+	{
+		list := make(map[string]string)
+		list[$1] = $3
+		$$ = list
+	}
+|	OuterArgList ',' identifier "=" identifier
+	{
+		list := $1.(map[string]string)
+		list[$3] = $5
+		$$ = list
 	}
 
 DefaultKwdOpt:
@@ -7291,6 +7315,10 @@ TableName:
 |	Identifier '.' Identifier
 	{
 		$$ = &ast.TableName{Schema: model.NewCIStr($1), Name: model.NewCIStr($3)}
+	}
+|	Identifier '.' Identifier '.' Identifier
+	{
+		$$ = &ast.TableName{Category: model.NewCIStr($1), Schema: model.NewCIStr($3), Name: model.NewCIStr($5)}
 	}
 
 TableNameList:

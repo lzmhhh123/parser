@@ -934,6 +934,7 @@ type CreateTableStmt struct {
 	Partition   *PartitionOptions
 	OnDuplicate OnDuplicateKeyHandlingType
 	Select      ResultSetNode
+	OuterArgs   map[string]string
 }
 
 // Restore implements Node interface.
@@ -979,7 +980,22 @@ func (n *CreateTableStmt) Restore(ctx *format.RestoreCtx) error {
 		}
 		ctx.WritePlain(")")
 	}
-
+	if len(n.OuterArgs) > 0 {
+		ctx.WritePlain("(")
+		i := 0
+		for key, value := range n.OuterArgs {
+			ctx.WriteString(key)
+			ctx.WritePlain("=")
+			ctx.WriteString(value)
+			i++
+			if i != len(n.OuterArgs) {
+				ctx.WritePlain(",")
+			}
+		}
+		ctx.WritePlain(")")
+		// the outer table ignore the options of table
+		return nil
+	}
 	for i, option := range n.Options {
 		ctx.WritePlain(" ")
 		if err := option.Restore(ctx); err != nil {

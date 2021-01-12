@@ -234,8 +234,9 @@ type TableName struct {
 	node
 	resultSetNode
 
-	Schema model.CIStr
-	Name   model.CIStr
+	Category model.CIStr
+	Schema   model.CIStr
+	Name     model.CIStr
 
 	DBInfo    *model.DBInfo
 	TableInfo *model.TableInfo
@@ -247,7 +248,10 @@ type TableName struct {
 
 // Restore implements Node interface.
 func (n *TableName) restoreName(ctx *format.RestoreCtx) {
-	if n.Schema.String() != "" {
+	if n.Category.String() != "" {
+		ctx.WriteName(n.Category.String())
+		ctx.WritePlain(".")
+	} else if n.Schema.String() != "" {
 		ctx.WriteName(n.Schema.String())
 		ctx.WritePlain(".")
 	} else if ctx.DefaultDB != "" {
