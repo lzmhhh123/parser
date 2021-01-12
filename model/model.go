@@ -327,8 +327,10 @@ type TableInfo struct {
 	// It's true when the engine of the table is TiFlash only.
 	IsColumnar bool `json:"is_columnar"`
 
+	// Catalog means the catalog of outer table
+	Catalog string `json:"catalog"`
 	// OuterOptions means the additional options of the outer table.
-	OuterOptions map[string]string
+	OuterOptions map[string]string `json:"outer_options"`
 }
 
 // TableLockInfo provides meta data describing a table lock.
