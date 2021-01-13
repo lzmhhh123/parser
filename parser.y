@@ -3462,6 +3462,10 @@ CreateDatabaseStmt:
 
 DBName:
 	Identifier
+|	Identifier '.' Identifier
+	{
+		$$ = $1 + "." + $2
+	}
 
 DatabaseOption:
 	DefaultKwdOpt CharsetKw EqOpt CharsetName

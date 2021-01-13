@@ -998,6 +998,7 @@ type DBInfo struct {
 	Collate string       `json:"collate"`
 	Tables  []*TableInfo `json:"-"` // Tables in the DB.
 	State   SchemaState  `json:"state"`
+	Catalog string       `json:"catalog"`
 }
 
 // Clone clones DBInfo.
