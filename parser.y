@@ -3547,13 +3547,13 @@ CreateTableStmt:
 	}
 
 OuterArgList:
-	identifier "=" identifier
+	stringLit "=" stringLit
 	{
 		list := make(map[string]string)
 		list[$1] = $3
 		$$ = list
 	}
-|	OuterArgList ',' identifier "=" identifier
+|	stringLit ',' stringLit "=" stringLit
 	{
 		list := $1.(map[string]string)
 		list[$3] = $5
