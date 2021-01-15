@@ -3536,14 +3536,14 @@ CreateTableStmt:
 			IsTemporary: $2.(bool),
 		}
 	}
-|	"CREATE" OptTemporary "TABLE" IfNotExists TableName "WITH" '(' OuterArgList ')'
+|	"CREATE" OptTemporary "TABLE" IfNotExists TableName TableElementListOpt "WITH" '(' OuterArgList ')'
 	{
-		$$ = &ast.CreateTableStmt{
-			Table:       $5.(*ast.TableName),
-			IfNotExists: $4.(bool),
-			IsTemporary: $2.(bool),
-			OuterArgs:   $8.(map[string]string),
-		}
+		stmt := $6.(*ast.CreateTableStmt)
+		stmt.Table = $5.(*ast.TableName)
+		stmt.IfNotExists = $4.(bool)
+		stmt.IsTemporary = $2.(bool)
+		stmt.OuterArgs = $9.(map[string]string)
+		$$ = stmt
 	}
 
 OuterArgList:
