@@ -3464,7 +3464,7 @@ DBName:
 	Identifier
 |	Identifier '.' Identifier
 	{
-		$$ = $1 + "." + $2
+		$$ = $1 + "." + $3
 	}
 
 DatabaseOption:
