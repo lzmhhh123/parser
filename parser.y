@@ -3553,7 +3553,7 @@ OuterArgList:
 		list[$1] = $3
 		$$ = list
 	}
-|	stringLit ',' stringLit "=" stringLit
+|	OuterArgList ',' stringLit "=" stringLit
 	{
 		list := $1.(map[string]string)
 		list[$3] = $5
