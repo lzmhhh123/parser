@@ -220,6 +220,7 @@ func (ft *FieldType) String() string {
 func (ft *FieldType) Restore(ctx *format.RestoreCtx) error {
 	if ctx.Flags|format.RestoreTpConvertFlinkType != 0 {
 		ctx.WriteKeyWord(TypeFlinkStr(ft.Tp))
+		return nil
 	}
 	ctx.WriteKeyWord(TypeToStr(ft.Tp, ft.Charset))
 	precision := UnspecifiedLength
