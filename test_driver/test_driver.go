@@ -78,7 +78,7 @@ func (n *ValueExpr) Restore(ctx *format.RestoreCtx) error {
 	case KindFloat64:
 		ctx.WritePlain(strconv.FormatFloat(n.GetFloat64(), 'e', -1, 64))
 	case KindString:
-		if n.Type.Charset != "" {
+		if n.Type.Charset != "" && ctx.Flags&format.RestoreTpConvertFlinkType == 0 {
 			ctx.WritePlain("_")
 			ctx.WriteKeyWord(n.Type.Charset)
 		}
@@ -89,7 +89,7 @@ func (n *ValueExpr) Restore(ctx *format.RestoreCtx) error {
 		ctx.WritePlain(n.GetMysqlDecimal().String())
 	case KindBinaryLiteral:
 		if n.Type.Charset != "" && n.Type.Charset != mysql.DefaultCharset &&
-			n.Type.Charset != charset.CharsetBin {
+			n.Type.Charset != charset.CharsetBin && ctx.Flags&format.RestoreTpConvertFlinkType == 0 {
 			ctx.WritePlain("_")
 			ctx.WriteKeyWord(n.Type.Charset + " ")
 		}
