@@ -248,8 +248,8 @@ type TableName struct {
 
 // Restore implements Node interface.
 func (n *TableName) restoreName(ctx *format.RestoreCtx) {
-	if n.Category.String() != "" {
-		ctx.WriteName(n.Category.String())
+	if ctx.Flags&format.RestoreTpConvertFlinkType != 0 {
+		ctx.WriteName("hive")
 		ctx.WritePlain(".")
 	}
 	if n.Schema.String() != "" {
