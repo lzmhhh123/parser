@@ -251,7 +251,8 @@ func (n *TableName) restoreName(ctx *format.RestoreCtx) {
 	if n.Category.String() != "" {
 		ctx.WriteName(n.Category.String())
 		ctx.WritePlain(".")
-	} else if n.Schema.String() != "" {
+	}
+	if n.Schema.String() != "" {
 		ctx.WriteName(n.Schema.String())
 		ctx.WritePlain(".")
 	} else if ctx.DefaultDB != "" {
